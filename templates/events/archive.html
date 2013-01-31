@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% load events_tags %}
 
-{% block title %}Tonight - {{ block.super }}{% endblock %}
+{% block title %}Archive - {{ block.super }}{% endblock %}
 
 {% block main_content %}
-	<a href="{% url ev_create %}">Create an Event</a>  <!--Example oh how to let Django manage links-->
+    <a href="{% url ev_create %}">Create an Event</a>  <!--Example oh how to let Django manage links-->
     {% if events %}
         {% for e in events %}
            {% event e %}
@@ -13,4 +13,3 @@
         <p>No events for today.</p>
     {% endif %}
 {% endblock %}
- 	

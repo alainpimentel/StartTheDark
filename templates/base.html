@@ -5,6 +5,10 @@
 		{% block extra_head %}{% endblock %}
 	</head>
 	<body>
+		<ul>
+			<li><a href="{% url ev_tonight %}">Tonight</a></li>
+			<li><a href="{% url ev_archive %}">Archive</a></li>
+		</ul>
 		{% block main_content %}{% endblock %}
 		{% block extra_body %}{% endblock %}
 	</body>
