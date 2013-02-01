@@ -14,4 +14,4 @@ def get_mutual_followers(user):
 	following = UserLink.objects.filter(to_user=user).values('from_user')
 	follows_set = set([i['to_user']for i in follows])
 	following_set = set([i['from_user']for i in following])
-	return User.objects.filter(id__in=follows_set.intersetion(following_set))
+	return User.objects.filter(id__in=follows_set.intersection(following_set))
