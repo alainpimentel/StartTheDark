@@ -4,13 +4,52 @@
 {% block title %}Tonight - {{ block.super }}{% endblock %}
 
 {% block main_content %}
-	<a href="{% url ev_create %}">Create an Event</a>  <!--Example oh how to let Django manage links-->
+    <p id="what_tonight">What is going on tonight?</p>
+    {% if user.is_authenticated %}
+        {{ event_form.description.errors }}
+        <form id="event_form" method="POST" action="{% url ev_create %}">
+            <input type="hidden" name="next" value="{{ request.path }}" />
+            <div id="event_description_field" class="grid_9 alpha">
+                {{ event_form.description }}
+            </div>
+            <div id="event_submit" class="grid_3 omega">
+                <input type="submit" value="Create Event" />
+            </div>
+        </form>
+        <div class="clear"></div>
+        <h2 id="my_event_title">My Event{{ my_events|pluralize }}</h2>
+        <p id="going_question">going?</p>
+        <div class="clear"></div>
+        <div id="my_event">
+            {% if my_events %}
+                {% for event in my_events %}
+                    {% event event counter.get_int %}
+                {% endfor %}
+            {% else %}
+                <p class="info">No Event Submitted Yet</p>
+            {% endif %}
+        </div>
+    {% endif %}
+    <h2 id="all_events_title">All Events</h2>
     {% if events %}
-        {% for e in events %}
-           {% event e %}
+        {% if not user.is_authenticated %}<p id="going_question">going?</p>{% endif %}
+        {% regroup events by start_date.hour as events_by_hour %}
+        {% for hour in events_by_hour %}
+            {% with hour.list.0.start_date as start %}
+            {% if start %}
+                <p class="event_time{% if forloop.first %}_first{% endif %}">{{ start|time:_("gA") }}</p>
+            {% else %}
+                <p>Other</p>
+            {% endif %}
+            {% endwith %}
+            {% for event in hour.list %}
+                {% event event counter.get_int %}
+            {% endfor %}
         {% endfor %}
     {% else %}
-        <p>No events for today.</p>
+        <p class="info">There are no events listed.</p>
+    {% endif %}
+    {% if user.is_authenticated and not following %}
+        <p class="info">It appears that you have not listed any friends yet.  This site will be much more interesting if you <a href="{% url sg_find_add %}">add some friends</a>!</p>
     {% endif %}
 {% endblock %}
- 	

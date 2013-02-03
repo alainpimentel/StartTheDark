@@ -1,15 +1,26 @@
 {% extends "base.html" %}
+{% load pagination_tags %}
+{% load humanize %}
 {% load events_tags %}
 
 {% block title %}Archive - {{ block.super }}{% endblock %}
 
 {% block main_content %}
-    <a href="{% url ev_create %}">Create an Event</a>  <!--Example oh how to let Django manage links-->
+    {% autopaginate events %}
     {% if events %}
-        {% for e in events %}
-           {% event e %}
+        <p id="going_question">going?</p>
+        {% regroup events by creation_date.date as events_by_start_date %}
+        {% for date in events_by_start_date %}
+            <p class="event_time{% if forloop.first %}_first{% endif %}">{{ date.grouper|naturalday:_("MONTH_DAY_FORMAT")|capfirst }}</p>
+            {% for event in date.list %}
+                {% event event counter.get_int %}
+            {% endfor %}
         {% endfor %}
+        {% paginate %}
     {% else %}
-        <p>No events for today.</p>
+        <p class="info">There are no events listed.</p>
+    {% endif %}
+    {% if user.is_authenticated and not following %}
+        <p class="info">It appears that you have not listed any friends yet.  This site will be much more interesting if you <a href="{% url sg_find_add %}">add some friends</a>!</p>
     {% endif %}
 {% endblock %}

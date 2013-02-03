@@ -9,27 +9,56 @@ from django.core.context_processors import csrf
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
-def tonight(request):
+def tonight(request, everyone=True):
 	events = Event.objects.today().filter(latest=True)
-	context = {
-		'events': events,
-	}
-	return render_to_response(
-			'events/tonight.html',
-			context,
-			context_instance = RequestContext(request),
-	)
+    if request.user.is_authenticated():
+        my_events = events.filter(creator=request.user) | events.filter(
+            attendance__user=request.user)
+        events = events.exclude(creator=request.user).exclude(
+            attendance__user=request.user)
+        following = request.user.following_set.all().values_list('to_user', 
+            flat=True)
+    else:
+        my_events = Event.objects.none()
+        following = None
+    if not everyone:
+        events = events.filter(creator__in=following) | events.filter(
+            attendance__user__in=following)
+    events = events.order_by('-start_date', '-creation_date').distinct()
+    context = {
+        'events': events,
+        'my_events': my_events,
+        'following': following,
+        'event_form': EventForm(),
+    }
+    return render_to_response(
+        'events/tonight.html',
+        context,
+        context_instance = RequestContext(request)
+    )
 
 def archive(request):
-	events = Event.objects.filter(latest=True)
-	context = {
-		'events': events,
-	}
-	return render_to_response(
-			'events/archive.html',
-			context,
-			context_instance = RequestContext(request),
-	)
+	events = Event.objects.filter(latest=True) | Event.objects.filter(
+        attendance__user__isnull=False)
+    if request.user.is_authenticated():
+        following = list(request.user.following_set.all().values_list('to_user', 
+            flat=True))
+    else:
+        following = None
+    if not everyone:
+        following.append(request.user.id)
+        events = events.filter(creator__in=following) | events.filter(
+            attendance__user__in=following)
+    events = events.order_by('-creation_date', '-start_date').distinct()
+    context = {
+        'events': events,
+        'following': following,
+    }
+    return render_to_response(
+        'events/archive.html',
+        context,
+        context_instance = RequestContext(request)
+    )
 
 #@login_required
 def create(request):
